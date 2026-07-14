@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scratch & Win — GraphicGroove Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #faf6ee;
+    --bg-2: #ffffff;
+    --gold: #c9a84c;
+    --gold-light: #e2c477;
+    --gold-deep: #a3843a;
+    --ink: #241f18;
+    --ink-dim: #6f6555;
+    --line: rgba(163,132,58,0.22);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(201,168,76,0.14), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .stage{
+    width:100%;
+    max-width:400px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+  }
+
+  .brandmark{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    text-align:center;
+  }
+  .brandmark .eyebrow{
+    font-size:11px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--gold-deep);
+    font-weight:700;
+  }
+  .brandmark h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-size:30px;
+    margin:0;
+    letter-spacing:0.01em;
+    color:var(--ink);
+  }
+  .brandmark p{
+    margin:0;
+    font-size:13px;
+    color:var(--ink-dim);
+  }
+
+  .card-wrap{
+    position:relative;
+    width:320px;
+    height:320px;
+  }
+
+  .card-frame{
+    position:absolute;
+    inset:0;
+    border-radius:18px;
+    padding:1px;
+    background:linear-gradient(155deg, var(--gold-light), var(--gold-deep) 45%, rgba(163,132,58,0.25) 100%);
+    box-shadow:
+      0 24px 48px -18px rgba(163,132,58,0.35),
+      0 2px 8px rgba(36,31,24,0.08);
+  }
+  .card-inner{
+    position:relative;
+    width:100%;
+    height:100%;
+    border-radius:17px;
+    background:var(--bg-2);
+    overflow:hidden;
+  }
+
+  .prize-face{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:20px;
+    text-align:center;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(201,168,76,0.10), transparent 60%),
+      var(--bg-2);
+  }
+  .prize-face .tag{
+    font-size:10px;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    color:var(--gold-deep);
+    font-weight:700;
+  }
+  .prize-face .prize-amount{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:52px;
+    line-height:1;
+    color:var(--ink);
+  }
+  .prize-face .prize-desc{
+    font-size:14px;
+    color:var(--ink-dim);
+    max-width:220px;
+  }
+
+  canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    cursor:grab;
+    touch-action:none;
+    border-radius:17px;
+  }
+  canvas:active{ cursor:grabbing; }
+
+  .hint{
+    position:absolute;
+    bottom:14px;
+    left:0;
+    right:0;
+    text-align:center;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:rgba(36,31,24,0.55);
+    pointer-events:none;
+    transition:opacity .4s ease;
+  }
+
+  .panel{
+    width:100%;
+    text-align:center;
+    min-height:64px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+
+  .status{
+    font-size:13px;
+    color:var(--ink-dim);
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .status.show{ opacity:1; transform:translateY(0); }
+
+  .cta{
+    appearance:none;
+    border:1px solid var(--gold-deep);
+    background:var(--gold-deep);
+    color:#fffdf8;
+    font-family:'Inter', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    padding:12px 26px;
+    border-radius:999px;
+    cursor:pointer;
+    opacity:0;
+    transform:translateY(6px) scale(0.98);
+    transition:opacity .5s ease .1s, transform .5s ease .1s, background .2s ease, box-shadow .2s ease;
+  }
+  .cta.show{ opacity:1; transform:translateY(0) scale(1); }
+  .cta:hover{ background:#8f7332; box-shadow:0 6px 16px rgba(163,132,58,0.3); }
+
+  .foot{
+    font-size:11px;
+    color:rgba(111,101,85,0.65);
+    text-align:center;
+    letter-spacing:0.02em;
+  }
+
+  .confetti{
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    z-index:5;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="brandmark">
+    <span class="eyebrow">GraphicGroove</span>
+    <h1>Scratch &amp; Reveal</h1>
+    <p>One card, one reveal. Good luck.</p>
+  </div>
+
+  <div class="card-wrap" id="cardWrap">
+    <div class="card-frame">
+      <div class="card-inner">
+        <div class="prize-face" id="prizeFace">
+          <span class="tag" id="prizeTag">You've won</span>
+          <div class="prize-amount" id="prizeAmount">20% Off</div>
+          <div class="prize-desc" id="prizeDesc">your next project, booked within 30 days.</div>
+        </div>
+        <canvas id="scratchCanvas" width="320" height="320"></canvas>
+        <div class="hint" id="hint">Scratch the gold to reveal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-wrap" id="messageWrap" style="display:none;">
+    <div class="card-frame">
+      <div class="card-inner">
+        <div class="prize-face">
+          <span class="tag" id="msgTag">Already used</span>
+          <div class="prize-amount" id="msgTitle" style="font-size:30px;">This card is done</div>
+          <div class="prize-desc" id="msgDesc">Each card can only be scratched once.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="status" id="status">Your reward is confirmed. Show this screen, or claim it below.</div>
+    <button class="cta" id="ctaBtn">Leave a Review &amp; Claim Reward</button>
+  </div>
+
+  <div class="panel" id="messagePanel" style="display:none;">
+    <div class="status show" id="messageStatus">Thanks for playing — see you next time.</div>
+  </div>
+
+  <div class="foot"></div>
+</div>
+
+<script>
+(async function(){
+  const cardWrap = document.getElementById('cardWrap');
+  const messageWrap = document.getElementById('messageWrap');
+  const panel = document.getElementById('panel');
+  const messagePanel = document.getElementById('messagePanel');
+  const msgTag = document.getElementById('msgTag');
+  const msgTitle = document.getElementById('msgTitle');
+  const msgDesc = document.getElementById('msgDesc');
+  const messageStatus = document.getElementById('messageStatus');
+
+  function showMessage(tag, title, desc, panelText){
+    cardWrap.style.display = 'none';
+    panel.style.display = 'none';
+    messageWrap.style.display = 'block';
+    messagePanel.style.display = 'flex';
+    msgTag.textContent = tag;
+    msgTitle.textContent = title;
+    msgDesc.textContent = desc;
+    messageStatus.textContent = panelText;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const code = (params.get('code') || '').trim().toUpperCase();
+
+  if(!code){
+    showMessage('Invalid link', 'No card found', 'This link is missing a card code. Ask us for a valid scratch card link.', 'No card code was found in this link.');
+    return;
+  }
+
+  let data;
+  try {
+    const res = await fetch('/api/check-code?code=' + encodeURIComponent(code));
+    data = await res.json();
+  } catch (err) {
+    showMessage('Connection issue', 'Couldn\u2019t load your card', 'Check your connection and reopen the link.', 'Couldn\u2019t reach the server. Please try again.');
+    return;
+  }
+
+  if(!data.valid){
+    showMessage('Invalid link', 'Card not recognized', 'This code doesn\u2019t match an active card. Ask us for a valid link.', 'This card code isn\u2019t valid.');
+    return;
+  }
+
+  if(data.used){
+    showMessage('Already used', 'This card is done', 'Each card can only be scratched once. Ask us for a new one next visit.', 'Thanks for playing — see you next time.');
+    return;
+  }
+
+  // Card is valid and unused — set up the playable scratch card.
+  const canvas = document.getElementById('scratchCanvas');
+  const ctx = canvas.getContext('2d');
+  const hint = document.getElementById('hint');
+  const status = document.getElementById('status');
+  const ctaBtn = document.getElementById('ctaBtn');
+
+  let revealed = false;
+  let drawing = false;
+  let dpr = Math.max(window.devicePixelRatio || 1, 1);
+
+  function sizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    paintFoil();
+  }
+
+  function paintFoil(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+
+    // smooth satin base
+    const base = ctx.createLinearGradient(0,0,w,h);
+    base.addColorStop(0, '#efd9a0');
+    base.addColorStop(0.45, '#d9b968');
+    base.addColorStop(1, '#b8934a');
+    ctx.fillStyle = base;
+    ctx.fillRect(0,0,w,h);
+
+    // soft sheen highlight, diagonal, blurred rather than lined
+    const sheen = ctx.createLinearGradient(0,0,w,h*0.6);
+    sheen.addColorStop(0, 'rgba(255,255,255,0.35)');
+    sheen.addColorStop(0.35, 'rgba(255,255,255,0.05)');
+    sheen.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0,0,w,h);
+
+    // gentle vignette for depth
+    const vign = ctx.createRadialGradient(w/2,h/2, h*0.15, w/2,h/2, h*0.75);
+    vign.addColorStop(0, 'rgba(0,0,0,0)');
+    vign.addColorStop(1, 'rgba(90,66,20,0.18)');
+    ctx.fillStyle = vign;
+    ctx.fillRect(0,0,w,h);
+
+    ctx.fillStyle = 'rgba(58,44,14,0.65)';
+    ctx.font = '600 13px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('S C R A T C H   H E R E', w/2, h/2 + 5);
+  }
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function scratchAt(x,y){
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x,y, 22, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function checkReveal(){
+    if(revealed) return;
+    const sampleStep = 8;
+    const imgData = ctx.getImageData(0,0, canvas.width, canvas.height).data;
+    let cleared = 0, total = 0;
+    const stepPx = sampleStep * dpr;
+    for(let y=0; y<canvas.height; y+=stepPx){
+      for(let x=0; x<canvas.width; x+=stepPx){
+        total++;
+        const idx = (y * canvas.width + x) * 4 + 3;
+        if(imgData[idx] < 80) cleared++;
+      }
+    }
+    if(total > 0 && cleared/total > 0.55){
+      reveal();
+    }
+  }
+
+  async function reveal(){
+    if(revealed) return;
+    revealed = true;
+    hint.style.opacity = '0';
+
+    // Claim the code server-side now — this is the moment it locks forever.
+    let claimData;
+    try {
+      const res = await fetch('/api/use-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      claimData = await res.json();
+    } catch (err) {
+      revealed = false;
+      status.textContent = 'Couldn\u2019t confirm your card — check your connection and try again.';
+      status.classList.add('show');
+      return;
+    }
+
+    if(!claimData.success){
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillRect(0,0,canvas.clientWidth, canvas.clientHeight);
+      status.textContent = 'This card was already claimed.';
+      status.classList.add('show');
+      return;
+    }
+
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillRect(0,0,canvas.clientWidth, canvas.clientHeight);
+
+    const prize = claimData.prize;
+    document.getElementById('prizeAmount').textContent = prize.label;
+    document.getElementById('prizeDesc').textContent = prize.desc;
+    document.getElementById('prizeTag').textContent = prize.won ? "You've won" : "So close";
+
+    if(prize.won){
+      status.textContent = 'Your reward is confirmed. Show this screen, or claim it below.';
+      status.classList.add('show');
+      ctaBtn.classList.add('show');
+      burstConfetti();
+    } else {
+      status.textContent = 'No reward this round — thanks for playing, and keep an eye out next time.';
+      status.classList.add('show');
+    }
+  }
+
+  function burstConfetti(){
+    const container = document.createElement('div');
+    container.className = 'confetti';
+    document.body.appendChild(container);
+    const colors = ['#c9a84c','#e2c477','#a3843a','#241f18'];
+    const rect = canvas.getBoundingClientRect();
+    const originX = rect.left + rect.width/2;
+    const originY = rect.top + rect.height/2;
+
+    for(let i=0;i<36;i++){
+      const p = document.createElement('div');
+      const size = 4 + Math.random()*5;
+      p.style.position = 'absolute';
+      p.style.left = originX + 'px';
+      p.style.top = originY + 'px';
+      p.style.width = size + 'px';
+      p.style.height = size*1.4 + 'px';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.borderRadius = '1px';
+      p.style.opacity = '1';
+      const angle = Math.random()*Math.PI*2;
+      const dist = 90 + Math.random()*160;
+      const dx = Math.cos(angle)*dist;
+      const dy = Math.sin(angle)*dist - 60;
+      const rot = Math.random()*720 - 360;
+      p.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy + 260}px) rotate(${rot}deg)`, opacity: 0 }
+      ], { duration: 1100 + Math.random()*500, easing: 'cubic-bezier(.2,.6,.3,1)' });
+      container.appendChild(p);
+    }
+    setTimeout(()=> container.remove(), 1700);
+  }
+
+  function pointerDown(e){
+    drawing = true;
+    const pos = getPos(e);
+    scratchAt(pos.x, pos.y);
+    hint.style.opacity = '0.0';
+  }
+  function pointerMove(e){
+    if(!drawing) return;
+    const pos = getPos(e);
+    scratchAt(pos.x, pos.y);
+    checkReveal();
+  }
+  function pointerUp(){
+    drawing = false;
+    checkReveal();
+  }
+
+  canvas.addEventListener('mousedown', pointerDown);
+  canvas.addEventListener('mousemove', pointerMove);
+  window.addEventListener('mouseup', pointerUp);
+
+  canvas.addEventListener('touchstart', (e)=>{ pointerDown(e); }, {passive:true});
+  canvas.addEventListener('touchmove', (e)=>{ pointerMove(e); e.preventDefault(); }, {passive:false});
+  window.addEventListener('touchend', pointerUp);
+
+  ctaBtn.addEventListener('click', ()=>{
+    window.open('https://g.page/r/CXpFJ1veyy3MEAE/review', '_blank');
+  });
+
+  window.addEventListener('resize', sizeCanvas);
+
+  sizeCanvas();
+})();
+</script>
+
+</body>
+</html>
