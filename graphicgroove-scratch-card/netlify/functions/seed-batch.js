@@ -72,5 +72,3 @@ export default async (req) => {
     headers: { "Content-Type": "application/json" }
   });
 };
-
-export const config = { path: "/api/seed-batch" };
