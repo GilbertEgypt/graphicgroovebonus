@@ -288,7 +288,7 @@
 
   let data;
   try {
-    const res = await fetch('/api/check-code?code=' + encodeURIComponent(code));
+    const res = await fetch('/.netlify/functions/check-code?code=' + encodeURIComponent(code));
     data = await res.json();
   } catch (err) {
     showMessage('Connection issue', 'Couldn\u2019t load your card', 'Check your connection and reopen the link.', 'Couldn\u2019t reach the server. Please try again.');
@@ -396,7 +396,7 @@
     // Claim the code server-side now — this is the moment it locks forever.
     let claimData;
     try {
-      const res = await fetch('/api/use-code', {
+      const res = await fetch('/.netlify/functions/use-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
